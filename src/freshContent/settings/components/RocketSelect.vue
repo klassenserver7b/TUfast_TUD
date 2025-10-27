@@ -1,23 +1,39 @@
 <template>
   <div class="rocket-select p-margin">
-    <div ref="sel" class="rocket-select__selector" :style="`--pos: ${pos}%`" />
     <div class="rocket-select__rockets">
-      <div v-for="(rocket, key, index) in rockets" :key="index" class="rocket-select__rocket">
-        <img
-          :class="`rocket-select__image ${index === 0 ? 'rocket-select__image--invert' : ''}`"
-          :src="getIcon(rocket)"
-          @click="select(rocket, index)"
-        />
-        <CustomLink
-          v-if="getLink(rocket)"
-          :href="getLink(rocket)"
-          target="_blank"
-          :txt="getText(rocket)"
-          @click="unlockRocket(key)"
-        />
-        <p v-else class="rocket-select__text">
-          {{ getText(rocket) }}
-        </p>
+      <div
+        v-for="(rocket, key, index) in rockets"
+        :key="index"
+        class="rocket-select__rocket"
+        :class="{ 'rocket-select__rocket--selected': selectedId === rocket.id }"
+      >
+        <div class="rocket-select__icon-wrapper">
+          <img
+            :class="[
+              'rocket-select__image',
+              {
+                'rocket-select__image--invert': index === 0,
+                'rocket-select__image--locked': !isUnlocked(rocket)
+              }
+            ]"
+            :src="getIcon(rocket)"
+            @click="select(rocket, index)"
+          />
+        </div>
+
+        <div class="rocket-select__content">
+          <CustomLink
+            v-if="getLink(rocket)"
+            :href="getLink(rocket)"
+            target="_blank"
+            :txt="getText(rocket)"
+            class="rocket-select__link"
+            @click="unlockRocket(key)"
+          />
+          <p v-else class="rocket-select__text">
+            {{ getText(rocket) }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -39,7 +55,6 @@ export default defineComponent({
   setup() {
     const { sendChromeRuntimeMessage } = useChrome()
 
-    const pos = ref(0)
     const availableRockets = ref(['default'])
     const selectedId = ref('default')
 
@@ -59,8 +74,6 @@ export default defineComponent({
           return 'default'
         }
       })()
-
-      pos.value = 100 * Object.keys(rockets).indexOf(selectedId.value)
     })
 
     const isUnlocked = (rocketObj: any) => {
@@ -71,7 +84,7 @@ export default defineComponent({
     const select = async (rocketObj: any, index: number) => {
       if (!isUnlocked(rocketObj)) return
 
-      pos.value = 100 * index
+      selectedId.value = rocketObj.id
 
       await sendChromeRuntimeMessage({ cmd: 'set_rocket_icon', rocketId: rocketObj.id })
     }
@@ -95,7 +108,7 @@ export default defineComponent({
 
     return {
       rockets,
-      pos,
+      selectedId,
       select,
       getLink,
       getText,
@@ -108,51 +121,94 @@ export default defineComponent({
 </script>
 
 <style lang="sass" scoped>
-.rocket-select
-    position: relative
-    display: flex
-    flex-direction: column
-    align-items: flex-start
-    min-width: max-content
-    width: 125px
 
-    &__selector
-        position: absolute
-        top: 0
-        left: 0
-        transition: all 200ms ease-out
-        height: 4rem
-        width: 4rem
-        padding: .3rem
-        border: 2px solid hsl(var(--clr-primary))
-        border-radius: 100%
-        transform: translateY(var(--pos))
+.rocket-select
+    width: 100%
+    max-width: 100%
 
     &__rockets
-        padding-left: .8rem
-        padding-top: .2rem
-        user-select: none
         display: flex
         flex-direction: column
-        justify-content: space-between
+        gap: 0.5rem
+        width: 100%
 
     &__rocket
+        display: grid
+        grid-template-columns: auto 1fr
+        gap: 1rem
+        align-items: center
+        padding: 0.5rem 0.8rem
+        border-radius: var(--brd-rad)
+        transition: background-color 200ms ease-in-out
+        min-height: 4rem
+        width: 100%
+
+        &--selected
+            background-color: hsla(var(--clr-accent), 0.1)
+            border: 2px solid hsl(var(--clr-accent))
+
+        &:not(&--selected)
+            border: 2px solid transparent
+
+    &__icon-wrapper
         display: flex
         align-items: center
-        height: 4rem
-        padding-right: .2rem
+        justify-content: center
+        width: 2.5rem
+        height: 2.5rem
+        flex-shrink: 0
 
     &__image
-        margin-right: .8rem
-        height: 2.5rem
+        width: 100%
+        height: 100%
+        object-fit: contain
         cursor: pointer
-        transition: transform 200ms ease
+        transition: transform 200ms ease-in-out
 
-        &:hover:not(&--beforeUnlocked)
+        &:not(&--locked):hover
             transform: scale(1.15)
 
-        &--beforeUnlocked
+        &--locked
             filter: grayscale(1)
+            opacity: 0.5
+            cursor: not-allowed
+
         &--invert
             filter: invert(1)
+
+        &--invert#{&--locked}
+            filter: invert(1) grayscale(1)
+            opacity: 0.5
+
+    &__content
+        min-width: 0
+        flex: 1
+        overflow: hidden
+
+    &__text,
+    &__link
+        word-wrap: break-word
+        overflow-wrap: break-word
+        hyphens: auto
+        line-height: 1.4
+        margin: 0
+
+    &__link
+        display: inline
+        max-width: 100%
+
+// Responsive adjustments
+@media (max-width: 480px)
+    .rocket-select
+        &__rocket
+            gap: 0.75rem
+            padding: 0.5rem
+
+        &__icon-wrapper
+            width: 2rem
+            height: 2rem
+
+        &__text,
+        &__link
+            font-size: 0.9rem
 </style>
