@@ -151,14 +151,13 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 })
 
-// register hotkeys - hotkeys now open as a new tab right next to the current tab
-chrome.commands.onCommand.addListener(async (command) => {
-  console.log('Detected command: ' + command)
+if (chrome.commands) {
+  // register hotkeys - hotkeys now open as a new tab right next to the current tab
+  chrome.commands.onCommand.addListener(async (command) => {
+    console.log('Detected command: ' + command)
 
-  // Get the current tab to find its index
-  const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true })
-
-  if (chrome.commands) {
+    // Get the current tab to find its index
+    const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true })
     switch (command) {
       case 'open_opal_hotkey':
         await chrome.tabs.create({
@@ -182,8 +181,8 @@ chrome.commands.onCommand.addListener(async (command) => {
         await saveClicks(2)
         break
     }
-  }
-})
+  })
+}
 
 // Set icon on startup
 chrome.storage.local.get(['selectedRocketIcon'], async (resp) => {
