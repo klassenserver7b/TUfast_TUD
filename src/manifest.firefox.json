@@ -1,6 +1,6 @@
 {
   "name": "TUfast TU Dresden",
-  "version": "8.2.0.0",
+  "version": "8.3.0.0",
   "description": "Das Produktivitäts-Tool für TU Dresden Studierende 🚀",
   "permissions": ["storage", "alarms"],
   "optional_permissions": ["tabs", "notifications", "cookies", "webRequest", "webRequestBlocking"],
@@ -249,7 +249,7 @@
   "manifest_version": 3,
   "browser_specific_settings": {
     "gecko": {
-      "id": "{7ef41014-4362-4367-9781-0a90f1317f82}"
+      "id": "{159b6f72-6536-444e-b2e0-3d7540da1446}"
     }
   },
   "commands": {
